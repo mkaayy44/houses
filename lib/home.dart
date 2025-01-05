@@ -1,16 +1,9 @@
 import 'package:flutter/material.dart';
-/// import 'product_search.dart';
-/// 
-
 import 'dart:convert' as convert;
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-// Base URL for REST API on the local server
-const String _baseURL = '127.0.0.1'; // Replace with your local machine's IP
+const String _baseURL = '127.0.0.1';
 
-
-// Class to represent a row from the houses table
 class House {
   final int hid;
   final String name;
@@ -26,10 +19,8 @@ class House {
   }
 }
 
-// List to hold houses retrieved from getHouses
 List<House> _houses = [];
 
-// Asynchronously update the _houses list
 void updateHouses(Function(bool success) update) async {
   try {
     final url = Uri.http(_baseURL, '/houses/getHouses.php');
@@ -56,7 +47,7 @@ void updateHouses(Function(bool success) update) async {
           row['name'],
           int.parse(row['size']),
           double.parse(row['price']),
-          row['category'], // Correct key used here
+          row['category'],
         );
         _houses.add(h);
       } catch (e) {
@@ -71,30 +62,25 @@ void updateHouses(Function(bool success) update) async {
   }
 }
 
-
-// Search for a single house by category
 void searchHouse(Function(String text) update, String category) async {
   try {
-    // Ensure the category is trimmed and not empty
     if (category.isEmpty) {
       update("Please enter a valid category.");
       return;
     }
 
-    // API call to fetch houses by category
-    final url = Uri.http(_baseURL, '/houses/searchHouse.php', {'Category': category});
+    final url =
+    Uri.http(_baseURL, '/houses/searchHouse.php', {'Category': category});
     final response = await http.get(url).timeout(const Duration(seconds: 5));
 
     if (response.statusCode == 200) {
       final jsonResponse = convert.jsonDecode(response.body);
 
-      // Check if any houses were returned
       if (jsonResponse == null || jsonResponse.isEmpty) {
         update("No houses found in the '$category' category.");
         return;
       }
 
-      // Clear existing houses and add only the filtered ones
       _houses.clear();
       for (var row in jsonResponse) {
         if (row['category'] == category) {
@@ -113,7 +99,6 @@ void searchHouse(Function(String text) update, String category) async {
         }
       }
 
-      // Display the list of houses matching the category
       if (_houses.isEmpty) {
         update("No houses found in the '$category' category.");
       } else {
@@ -127,9 +112,6 @@ void searchHouse(Function(String text) update, String category) async {
   }
 }
 
-
-
-// Widget to display the list of houses
 class ShowHouses extends StatelessWidget {
   const ShowHouses({super.key});
 
@@ -152,9 +134,7 @@ class ShowHouses extends StatelessWidget {
         children: [
           const SizedBox(height: 10),
           Container(
-            color: index % 2 == 0
-                ? const Color.fromARGB(255, 132, 181, 142)
-                : const Color.fromARGB(255, 236, 203, 232),
+            color: const Color.fromARGB(255, 206, 218, 180),
             padding: const EdgeInsets.all(5),
             width: width * 0.9,
             child: Row(
@@ -175,8 +155,6 @@ class ShowHouses extends StatelessWidget {
   }
 }
 
-
-// Widget to search houses
 class Search extends StatefulWidget {
   const Search({super.key});
 
@@ -217,6 +195,7 @@ class _SearchState extends State<Search> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Search for your house by category:'),
+        backgroundColor: const Color.fromARGB(255, 165, 125, 168),
         centerTitle: true,
       ),
       body: Center(
@@ -229,14 +208,22 @@ class _SearchState extends State<Search> {
                 controller: _controllerID,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  hintText: 'Enter Category',
+                  hintText: 'Enter House Category',
                 ),
               ),
             ),
             const SizedBox(height: 10),
             ElevatedButton(
               onPressed: getHouse,
-              child: const Text('Find', style: TextStyle(fontSize: 18)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color.fromARGB(255, 154, 133, 167),
+                padding: const EdgeInsets.symmetric(
+                    vertical: 12, horizontal: 25),
+              ),
+              child: const Text(
+                'Find',
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
             ),
             const SizedBox(height: 10),
             Center(
@@ -255,8 +242,6 @@ class _SearchState extends State<Search> {
   }
 }
 
-
-
 class Home extends StatefulWidget {
   const Home({super.key});
 
@@ -265,21 +250,20 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  bool _load = false; // used to show products list or progress bar
+  bool _load = false;
 
   void update(bool success) {
     setState(() {
-      _load = true; // show product list
-      if (!success) { // API request failed
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('failed to load data')));
+      _load = true;
+      if (!success) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('failed to load data')));
       }
     });
   }
 
-
   @override
   void initState() {
-    // update data when the widget is added to the tree the first tome.
     updateHouses(update);
     super.initState();
   }
@@ -287,28 +271,37 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(actions: [
-          IconButton(onPressed: !_load ? null : () {
-            setState(() {
-              _load = false; // show progress bar
-              updateHouses(update); // update data asynchronously
-            });
-          }, icon: const Icon(Icons.refresh)),
-          IconButton(onPressed: () {
-            setState(() { // open the search product page
-              Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const Search())
-              );
-            });
-          }, icon: const Icon(Icons.search))
-        ],
-          title: const Text('All Our Available Houses'),
+        appBar: AppBar(
+          actions: [
+            IconButton(
+                onPressed: !_load
+                    ? null
+                    : () {
+                  setState(() {
+                    _load = false;
+                    updateHouses(update);
+                  });
+                },
+                icon: const Icon(Icons.refresh)),
+            IconButton(
+                onPressed: () {
+                  setState(() {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => const Search()));
+                  });
+                },
+                icon: const Icon(Icons.search))
+          ],
+          title: const Text('All Our Available Houses For Sale'),
+          backgroundColor: const Color.fromARGB(255, 163, 159, 215),
           centerTitle: true,
         ),
-        // load products or progress bar
-        body: _load ? const ShowHouses() : const Center(
-            child: SizedBox(width: 100, height: 100, child: CircularProgressIndicator())
-        )
-    );
+        body: _load
+            ? const ShowHouses()
+            : const Center(
+            child: SizedBox(
+                width: 100,
+                height: 100,
+                child: CircularProgressIndicator())));
   }
 }
